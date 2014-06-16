@@ -11,21 +11,26 @@
 #include "clar/clar.h"
 #include "rxc.h"
 
-//TODO: Not sure it makes sense to have a naked rxc_source_create...
-void test_core_source__can__create(void) {
-  rxc_source * source = NULL;
-  int ok = rxc_source_create(&source);
-  cl_assert_equal_i(0,ok);
-  cl_assert(source!=NULL);
-  rxc_source_free(source);
+//Since we're going to check the internals are set up correctly we need to know the internals ;)
+#include "rxc/internal/types.h"
+
+void test_source__v_cb_subscribe(rxc_subscription * subscription) {
 }
+
+void test_source__v_free(rxc_source * self) {
+} 
 
 void test_core_source__subscribe_returns_a_subscription(void) {
   int ok;
   rxc_source * source = NULL;
   rxc_observer * observer = NULL;
 
-  ok = rxc_source_create(&source);
+  rxc_source__vtable vtable = {
+    test_source__v_cb_subscribe,
+    test_source__v_free
+  };
+
+  ok = rxc_source_create(&source, &vtable, NULL);
   cl_assert_equal_i(0,ok);
   ok = rxc_observer_create(&observer);
   cl_assert_equal_i(0,ok);
@@ -35,7 +40,12 @@ void test_core_source__subscribe_returns_a_subscription(void) {
 
   cl_assert(subscription!=NULL);
 
+
+  rxc_subscription_unsubscribe(subscription);
+  // Caller owns the subscription, and so must delete it!
+  rxc_subscription_free(subscription);
   rxc_source_free(source);
+  rxc_observer_free(observer);
 }
 
 struct callback_info_for_test {
@@ -86,8 +96,6 @@ void test_core_source__seq_source(void) {
 
   rxc_subscription * subscription = rxc_source_subscribe(source, observer, &info );
 
-  //TODO: Set the callbacks
-
   // A seq source should notify the connecting observers immediately
 
   cl_assert_equal_i(10, info.number_of_value_callbacks);
@@ -97,5 +105,13 @@ void test_core_source__seq_source(void) {
   cl_assert_equal_i(0,  info.number_of_error_callbacks);
 
   rxc_subscription_unsubscribe(subscription);
+
+  rxc_subscription_free(subscription);
+  rxc_source_free(source);
+  rxc_observer_free(observer);
+
+}
+
+void test_core_source__notify(void) {
 
 }
