@@ -1,45 +1,41 @@
 #include "rxc.h"
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #include "rxc/internal/types.h"
 #include "rxc/internal/memory.h"
 
-int rxc_observer_create(rxc_observer** observer) {
-  *observer = (rxc_observer*)rxc__malloc(sizeof(rxc_observer));
-  memset((rxc_observer*)*observer,0,sizeof(rxc_observer));
-  (*observer)->vtable = (rxc_observer__vtable*)rxc__malloc(sizeof(rxc_observer__vtable));
-  memset((rxc_observer__vtable*)(*observer)->vtable,0,sizeof(rxc_observer__vtable));
+static void validate_vtable(const rxc_observer_vtable * vtable ) {
+  assert(vtable);
+  assert(vtable->next);
+  assert(vtable->done);
+  assert(vtable->error);
+  assert(vtable->on_subscribe);
+  assert(vtable->free);
+}
+
+int rxc_observer_create(rxc_observer** observer, const rxc_observer_vtable * vtable, void * data) {
+  if(observer==NULL)
+    return 1;
+  if(vtable==NULL)
+    return 1;
+
+  validate_vtable(vtable);
+  
+  rxc_observer * ob = (rxc_observer*)rxc__malloc(sizeof(rxc_observer));
+  memset((rxc_observer*)ob,0,sizeof(rxc_observer));
+  ob->vtable = vtable;
+  ob->data = data;
+  *observer = ob;
   return 0;
 }
 
 int rxc_observer_free(rxc_observer* observer) {
-  free((void*)observer->vtable);
-  free(observer);
-  return 0;
-}
-
-int rxc_observer_set_on_next_callback(
-    rxc_observer* observer,
-    rxc_observer_next_callback on_next ) {
-  // Should we really duplicate the vtable and then set?
-  ((rxc_observer__vtable*)observer->vtable)->next = on_next;
-  return 0;
-}
-
-int rxc_observer_set_on_error_callback(
-    rxc_observer* observer,
-    rxc_observer_error_callback on_error) {
-  // Should we really duplicate the vtable and then set?
-  ((rxc_observer__vtable*)observer->vtable)->error = on_error;
-  return 0;
-}
-
-int rxc_observer_set_on_done_callback(
-    rxc_observer* observer,
-    rxc_observer_done_callback on_done) {
-  // Should we really duplicate the vtable and then set?
-  ((rxc_observer__vtable*)observer->vtable)->done = on_done;
+  assert(observer->vtable);
+  assert(observer->vtable->free);
+  observer->vtable->free(observer);
+  rxc__free(observer);
   return 0;
 }
 
@@ -51,6 +47,9 @@ void rxc_observer_next(
   rxc_subscription * subscription,
   void * value
   ) {
+    assert(self->vtable);
+    assert(self->vtable->next);
+
     self->vtable->next(self, subscription, value);
 }
 

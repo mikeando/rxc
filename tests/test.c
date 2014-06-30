@@ -9,6 +9,8 @@ int main(int argc, char* argv[]) {
 
   int res = clar_test(argc,argv);
 
+//  char c;
+//  read(0, &c, 1);
   return res;
 }
 

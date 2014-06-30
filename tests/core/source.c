@@ -19,6 +19,24 @@ void test_source__v_cb_subscribe(rxc_subscription * subscription) {
 
 void test_source__v_free(rxc_source * self) {
 } 
+static void test_ob_next(rxc_observer * self, rxc_subscription * subscription, void * data) {
+}
+static void test_ob_done(rxc_observer * self, rxc_subscription * subscription) {
+}
+static void test_ob_error(rxc_observer * self, rxc_subscription * subscription, void * data) {
+}
+static void test_ob_on_subscribe(rxc_subscription * subscription) {
+}
+static void test_ob_free(rxc_observer * self) {
+}
+
+static rxc_observer_vtable ob_vtable = {
+  test_ob_next,
+  test_ob_done,
+  test_ob_error,
+  test_ob_on_subscribe,
+  test_ob_free,
+};
 
 void test_core_source__subscribe_returns_a_subscription(void) {
   int ok;
@@ -32,7 +50,7 @@ void test_core_source__subscribe_returns_a_subscription(void) {
 
   ok = rxc_source_create(&source, &vtable, NULL);
   cl_assert_equal_i(0,ok);
-  ok = rxc_observer_create(&observer);
+  ok = rxc_observer_create(&observer,&ob_vtable,NULL);
   cl_assert_equal_i(0,ok);
 
   //The NULL user data is stored into the subscription (along with the observer) so that the callbacks can access them
@@ -77,6 +95,14 @@ void dummy_on_error(rxc_observer * self, rxc_subscription * subscription, void *
   info->number_of_error_callbacks++;
 }
 
+static rxc_observer_vtable seq_test_ob_vtable = {
+  dummy_on_next,
+  dummy_on_done,
+  dummy_on_error,
+  test_ob_on_subscribe,
+  test_ob_free,
+};
+
 
 void test_core_source__seq_source(void) {
 
@@ -86,10 +112,7 @@ void test_core_source__seq_source(void) {
 
   ok = rxc_source_create_seq(&source, 1, 10);
 
-  rxc_observer_create(&observer);
-  rxc_observer_set_on_next_callback(observer, dummy_on_next );
-  rxc_observer_set_on_done_callback(observer, dummy_on_done );
-  rxc_observer_set_on_error_callback(observer, dummy_on_error );
+  rxc_observer_create(&observer, &seq_test_ob_vtable, NULL);
 
 
   struct callback_info_for_test info = {};

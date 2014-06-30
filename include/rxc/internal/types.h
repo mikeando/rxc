@@ -3,26 +3,21 @@
 
 #include "rxc.h"
 
-struct rxc_observer__vtable {
-  rxc_observer_next_callback next;
-  rxc_observer_done_callback done;
-  rxc_observer_error_callback error;
-  rxc_observer_on_subscribe_callback on_subscribe;
-};
-
-typedef struct rxc_observer__vtable rxc_observer__vtable;
 
 struct rxc_observer {
-  const rxc_observer__vtable * vtable;
+  const rxc_observer_vtable * vtable;
+  void * data;
 };
 
 
 typedef void(*rxc_source__cb_subscribe)(rxc_subscription * subscription);
 typedef void(*rxc_source__cb_free)(rxc_source * self);
+typedef void(*rxc_source__notify)(rxc_source * self, void * data);
 
 struct rxc_source__vtable {
   rxc_source__cb_subscribe on_subscribe;
   rxc_source__cb_free free;
+  rxc_source__notify notify;
 };
 
 //TODO: Uncomment this when the definition is removed from rxc.h

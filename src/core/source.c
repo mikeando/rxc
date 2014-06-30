@@ -117,3 +117,14 @@ void * rxc_subscription_data(rxc_subscription * subscription) {
 void rxc_subscription_free(rxc_subscription * subscription) {
   rxc__free(subscription);
 }
+
+//TODO: Better error handling?
+void rxc_source_notify(rxc_source * source, void * data) {
+  if(!source)
+    return;
+  if(!source->vtable)
+    return;
+  if(!source->vtable->notify)
+    return;
+  source->vtable->notify(source,data);
+}
