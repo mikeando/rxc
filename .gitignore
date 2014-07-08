@@ -1,0 +1,19 @@
+# Products
+librxc.a
+run_tests
+
+# Intermediates and build cruft
+tests/.clarcache
+tests/clar.suite
+.sconsign.dblite
+**/*.o
+
+# Editor temp files
+**/.*.swp
+**/.*.swo
+
+# Coverage info
+*.gcov
+**/*.gcno
+**/*.gcda
+
