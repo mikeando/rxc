@@ -1,0 +1,5 @@
+#include "rxc.h"
+
+
+void * RXC_PROPERTY_CHANGED_EVENT = &RXC_PROPERTY_CHANGED_EVENT;
+

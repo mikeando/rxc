@@ -113,7 +113,9 @@ struct rxc_event {
 
 typedef struct rxc_event rxc_event;
 
-static void * RXC_PROPERTY_CHANGED_EVENT = &RXC_PROPERTY_CHANGED_EVENT;
+
+//TODO: Make this more typesafe?
+extern void * RXC_PROPERTY_CHANGED_EVENT;
 
 
 // Real properties stuff
