@@ -46,7 +46,8 @@ void rxc_property_set(rxc_property* p, const rxc_property_value *v) {
 }
 
 void rxc_property_set_integer(rxc_property* p, int i) {
-  rxc_property_value v = {};
+  rxc_property_value v;
+  memset(&v,0,sizeof(rxc_property_value));
   v.type = RXC_PROPERTY_INT;
   v.value.as_int = i;
   rxc_property_set(p,&v);
@@ -58,26 +59,26 @@ rxc_source * rxc_property_source(rxc_property * p) {
 
 struct rxc_property_derived_data {
   rxc_observer * observer;
-  int n_subscriptions;
+  unsigned int n_subscriptions;
   rxc_subscription ** subscriptions;
-  void(*map)(rxc_property*, rxc_property**, int);
+  void(*map)(rxc_property*, rxc_property**, unsigned int);
 };
 
 typedef struct rxc_property_derived_data rxc_property_derived_data;
 
-void prop_observer_next(rxc_observer * self, rxc_subscription * subscription, void * data) {
+static void prop_observer_next(rxc_observer * self, rxc_subscription * subscription, void * data) {
   //TODO: Implement me
 }
-void prop_observer_error(rxc_observer * self, rxc_subscription * subscription, void * data) {
+static void prop_observer_error(rxc_observer * self, rxc_subscription * subscription, void * data) {
   //TODO: Implement me
 }
-void prop_observer_done(rxc_observer * self, rxc_subscription * subscription) {
+static void prop_observer_done(rxc_observer * self, rxc_subscription * subscription) {
   //TODO: Implement me
 }
-void prop_observer_on_subscribe(rxc_subscription * subscription) {
+static void prop_observer_on_subscribe(rxc_subscription * subscription) {
   //TODO: Implement me
 }
-void prop_observer_free(rxc_observer * self) {
+static void prop_observer_free(rxc_observer * self) {
   //TODO: Implement me
 }
 
@@ -92,7 +93,7 @@ static rxc_observer_vtable derived_observer_vtable = {
 void rxc_property__derived_free(rxc_property*self);
 void rxc_property__derived_free(rxc_property*self) {
   rxc_property_derived_data * data = (rxc_property_derived_data*)self->data;
-  for(int i=0; i<data->n_subscriptions; ++i) {
+  for(unsigned int i=0; i<data->n_subscriptions; ++i) {
     //TODO: Should we unsubscribe here?
     rxc_subscription_free(data->subscriptions[i]);
   }
@@ -108,7 +109,7 @@ static rxc_property_vtable derived_property_vtable = {
 
 
 
-rxc_property* rxc_property_derived_create( void(*map)(rxc_property*, rxc_property**, int), rxc_property** properties, int n_properties) {
+rxc_property* rxc_property_derived_create( void(*map)(rxc_property*, rxc_property**, unsigned int), rxc_property** properties, unsigned int n_properties) {
   rxc_property * property = rxc_property_create(&derived_property_vtable);
   rxc_property_derived_data * data = (rxc_property_derived_data*)rxc__malloc(sizeof(rxc_property_derived_data));
   memset(data,0,sizeof(rxc_property_derived_data));
@@ -117,7 +118,7 @@ rxc_property* rxc_property_derived_create( void(*map)(rxc_property*, rxc_propert
 
   // Now we need to set listeners on the other properties.
   rxc_subscription ** subs= (rxc_subscription**)rxc__malloc(n_properties*sizeof(rxc_subscription*));
-  for( int i=0; i<n_properties; ++i) {
+  for( unsigned int i=0; i<n_properties; ++i) {
     rxc_source * source = rxc_property_source(properties[i]);
     subs[i] = rxc_source_subscribe(source,data->observer,NULL);
   }

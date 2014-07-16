@@ -4,24 +4,24 @@
 #include <assert.h>
 
 struct rxc_simple_source__data {
-  int n_subscriptions;
+  unsigned int n_subscriptions;
   rxc_subscription ** subscriptions;
 };
 
 typedef struct rxc_simple_source__data rxc_simple_source__data;
 
-void rxc_simple_source__notify(rxc_source * s, void * data) {
+static void rxc_simple_source__notify(rxc_source * s, void * data) {
 
   rxc_simple_source__data * source_data = (rxc_simple_source__data*)(s->data);
   assert(source_data!=NULL);
-  for(int i=0; i<source_data->n_subscriptions; ++i) {
+  for(unsigned int i=0; i<source_data->n_subscriptions; ++i) {
     rxc_subscription * subscription = source_data->subscriptions[i];
     assert(subscription!=NULL);
     rxc_observer_next(subscription->observer, subscription, data);
   }
 }
 
-void rxc_simple_source__free(rxc_source * self) {
+static void rxc_simple_source__free(rxc_source * self) {
   //TODO: Let everyone know and wait for their unsubscriptions
   //      Means we should just set a flag here, then delete everything
   //      in unsubscribe...
@@ -31,7 +31,7 @@ void rxc_simple_source__free(rxc_source * self) {
   rxc__free(source_data);
 }
 
-void rxc_simple_source__subscribe(rxc_subscription * subscription) {
+static void rxc_simple_source__subscribe(rxc_subscription * subscription) {
   rxc_source * self = subscription->source;
   rxc_simple_source__data * source_data = (rxc_simple_source__data*)(self->data);
   assert(source_data!=NULL);

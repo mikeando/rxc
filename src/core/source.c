@@ -58,13 +58,17 @@ static void rxc_source_seq__cb_subscribe(rxc_subscription * subscription) {
   rxc_observer_done(observer, subscription);
 }
 
-void rxc_source_seq__free(rxc_source * self) {
+static void rxc_source_seq__free(rxc_source * self) {
   free(self->data);
+}
+static void rxc_source_seq__notify(rxc_source * self, void * notification) {
+	//TODO: Implement me!
 }
 
 static const rxc_source__vtable seq_vtable = {
   rxc_source_seq__cb_subscribe,
-  rxc_source_seq__free
+  rxc_source_seq__free,
+  rxc_source_seq__notify
 };
 
 int rxc_source_create_seq(rxc_source ** source, int min, int max) {

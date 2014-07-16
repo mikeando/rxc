@@ -19,6 +19,8 @@ void test_source__v_cb_subscribe(rxc_subscription * subscription) {
 
 void test_source__v_free(rxc_source * self) {
 } 
+void test_source__v_notify(rxc_source * self, void* notification) {
+} 
 static void test_ob_next(rxc_observer * self, rxc_subscription * subscription, void * data) {
 }
 static void test_ob_done(rxc_observer * self, rxc_subscription * subscription) {
@@ -45,7 +47,9 @@ void test_core_source__subscribe_returns_a_subscription(void) {
 
   rxc_source__vtable vtable = {
     test_source__v_cb_subscribe,
-    test_source__v_free
+    test_source__v_free,
+    test_source__v_notify
+
   };
 
   ok = rxc_source_create(&source, &vtable, NULL);
@@ -115,7 +119,7 @@ void test_core_source__seq_source(void) {
   rxc_observer_create(&observer, &seq_test_ob_vtable, NULL);
 
 
-  struct callback_info_for_test info = {};
+  struct callback_info_for_test info = {0,0,0,0,0};
 
   rxc_subscription * subscription = rxc_source_subscribe(source, observer, &info );
 

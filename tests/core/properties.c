@@ -16,21 +16,21 @@
 #include "rxc/internal/types.h"
 #include <stdio.h>
 
-rxc_property * i1 = NULL;
-rxc_property * i2 = NULL;
-rxc_property * d1 = NULL;
+static rxc_property * i1 = NULL;
+static rxc_property * i2 = NULL;
+static rxc_property * d1 = NULL;
 
 struct test_data {
   int notification_count;
   void * last_p;
 };
-struct test_data * data = NULL;
-void * dummy = &dummy;
+static struct test_data * data = NULL;
+static void * dummy = &dummy;
 
-rxc_source * naked_source = NULL;
+static rxc_source * naked_source = NULL;
 
-void test_ob_next(rxc_observer * self, rxc_subscription * subscription, void * data) {
-  rxc_event * event = (rxc_event*)data;
+static void test_ob_next(rxc_observer * self, rxc_subscription * subscription, void * indata) {
+  rxc_event * event = (rxc_event*)indata;
   cl_assert( event->event_type == RXC_PROPERTY_CHANGED_EVENT );
 
   struct test_data * ob_data = (struct test_data*)self->data;
@@ -38,17 +38,18 @@ void test_ob_next(rxc_observer * self, rxc_subscription * subscription, void * d
   ob_data->last_p = event->data;
 }
 
-void test_ob_done(rxc_observer * self, rxc_subscription * subscription) {
+static void test_ob_done(rxc_observer * self, rxc_subscription * subscription) {
 }
 
-void test_ob_error(rxc_observer * self, rxc_subscription * subscription, void * data) {
+static void test_ob_error(rxc_observer * self, rxc_subscription * subscription, void * indata) {
 }
 
-void test_ob_on_subscribe(rxc_subscription * subscription) {
+static void test_ob_on_subscribe(rxc_subscription * subscription) {
 }
 
-void test_ob_free(rxc_observer * self) {
+static void test_ob_free(rxc_observer * self) {
 }
+
 static rxc_observer_vtable ob_vtable = {
   test_ob_next,
   test_ob_done,
@@ -57,12 +58,12 @@ static rxc_observer_vtable ob_vtable = {
   test_ob_free
 };
 
-rxc_observer * ob=NULL;
+static rxc_observer * ob=NULL;
 
-void simple_property_free(rxc_property * p) {
+static void simple_property_free(rxc_property * p) {
 }
 
-rxc_property_vtable simple_property_vtable = {
+static rxc_property_vtable simple_property_vtable = {
   simple_property_free
 };
 
@@ -113,7 +114,7 @@ void test_core_properties__cleanup(void) {
 }
 
 
-void test_int_add(rxc_property* v, rxc_property** ps, int n) {
+void test_int_add(rxc_property* v, rxc_property** ps, unsigned int n) {
 }
 
 // This is more of a functional test than a unit
@@ -127,7 +128,8 @@ void test_core_properties__chained_properties(void) {
   d1 = rxc_property_derived_create(test_int_add, ps, 2);
   cl_assert(d1!=NULL);
 
-  rxc_property_value v = {};
+  rxc_property_value v;
+  memset(&v,0,sizeof(rxc_property_value));
   cl_assert( v.type == RXC_PROPERTY_UNKNOWN );
   rxc_property_get(d1,&v);
   cl_assert( v.type == RXC_PROPERTY_UNKNOWN );
@@ -141,7 +143,8 @@ void test_core_properties__chained_properties(void) {
 }
 
 void test_core_properties__set_and_get(void) {
-  rxc_property_value v = {};
+  rxc_property_value v;
+  memset(&v,0,sizeof(rxc_property_value));
 
   rxc_property_get(i1, &v);
   cl_assert( v.type == RXC_PROPERTY_UNKNOWN );
@@ -154,9 +157,12 @@ void test_core_properties__set_and_get(void) {
 
 void test_core_properties__raw_get_and_set(void) {
   
-  rxc_property_value v = {};
+  rxc_property_value v;
+  memset(&v,0,sizeof(rxc_property_value));
 
-  rxc_property_value v2 = {};
+  rxc_property_value v2;
+  memset(&v2,0,sizeof(rxc_property_value));
+
   v2.type = RXC_PROPERTY_INT;
   v2.value.as_int = 10;
 
@@ -167,11 +173,14 @@ void test_core_properties__raw_get_and_set(void) {
 }
 
 void test_core_properties__property_value_copy(void) {
-  rxc_property_value v = {};
+  rxc_property_value v;
+  memset(&v,0,sizeof(rxc_property_value));
+
   v.type = RXC_PROPERTY_INT;
   v.value.as_int = 10;
 
-  rxc_property_value v_cpy = {};
+  rxc_property_value v_cpy;
+  memset(&v_cpy,0,sizeof(rxc_property_value));
   rxc_property_value_copy(&v_cpy,&v);
 
   cl_assert( v_cpy.type==RXC_PROPERTY_INT );
