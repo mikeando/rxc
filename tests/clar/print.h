@@ -35,7 +35,7 @@ static void clar_print_error(int num, const struct clar_error *error)
 	fflush(stdout);
 }
 
-int sub_test_index =0;
+static int sub_test_index =0;
 
 static void clar_print_ontest(const char *test_name, int test_number, int failed)
 {
