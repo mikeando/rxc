@@ -90,6 +90,7 @@ static void derived_prop_observer_next(rxc_observer * self, rxc_subscription * s
 
   rxc_property_value v;
   derived_data->map(&v, values, derived_data->n_subscriptions);
+  free(values);
   rxc_property_set(p,&v);
 
   // Get each property
@@ -167,6 +168,7 @@ rxc_property* rxc_property_derived_create( void(*map)(rxc_property_value*, rxc_p
 
   rxc_property_value v;
   data->map(&v, values, n_properties);
+  free(values);
   rxc_property_set(property,&v);
 
   return property;
