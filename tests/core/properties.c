@@ -114,7 +114,18 @@ void test_core_properties__cleanup(void) {
 }
 
 
-void test_int_add(rxc_property* v, rxc_property** ps, unsigned int n) {
+void test_int_add(rxc_property_value* v, rxc_property_value* ps, unsigned int n) {
+  int sum = 0;
+  for(unsigned int i=0; i<n; ++i) {
+    if( ps[i].type!=RXC_PROPERTY_INT ) {
+      //TODO Should we flag an error of some kind here.. if so how!
+      v->type = RXC_PROPERTY_UNKNOWN;
+      return;
+    }
+    sum += ps[i].value.as_int;
+  }
+  v->type = RXC_PROPERTY_INT;
+  v->value.as_int = sum;
 }
 
 // This is more of a functional test than a unit
@@ -141,6 +152,39 @@ void test_core_properties__chained_properties(void) {
   cl_assert( v.type == RXC_PROPERTY_INT );
   cl_assert_equal_i(30, v.value.as_int);
 }
+
+
+static int derived_map_call_count;
+
+static void test_derived_map(rxc_property_value * out, rxc_property_value * values, unsigned int count) {
+  cl_assert(count==1);
+  derived_map_call_count++;
+  out->type = RXC_PROPERTY_UNKNOWN;
+}
+
+void test_core_properties__derived_property_calls_map_on_create(void) {
+  derived_map_call_count = 0;
+  d1 = rxc_property_derived_create(test_derived_map, &i1, 1);
+  cl_assert_equal_i(1, derived_map_call_count);
+}
+
+void test_core_properties__derived_property_calls_map_on_change_event(void) {
+  derived_map_call_count = 0;
+  d1 = rxc_property_derived_create(test_derived_map, &i1, 1);
+  cl_assert_equal_i(1, derived_map_call_count);
+  rxc_property_set_integer(i1,3);
+  cl_assert_equal_i(2, derived_map_call_count);
+}
+
+void test_core_properties__derived_property_forwards_error(void) {
+	cl_fail("NYI");
+}
+
+void test_core_properties__derived_property_forwards_done(void) {
+	cl_fail("NYI");
+}
+
+
 
 void test_core_properties__set_and_get(void) {
   rxc_property_value v;
@@ -230,4 +274,11 @@ void test_core_properties__set_sends_change_event(void) {
   //Clean up
   rxc_subscription_unsubscribe(sub);
   rxc_subscription_free(sub);
+}
+
+void test_core_properties__property_source_data_is_property(void) {
+  rxc_source * src = rxc_property_source(i1);
+  void * data = src->user_data;
+  
+  cl_assert_equal_p(data,i1);
 }

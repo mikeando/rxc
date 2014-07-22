@@ -12,7 +12,7 @@ typedef struct rxc_simple_source__data rxc_simple_source__data;
 
 static void rxc_simple_source__notify(rxc_source * s, void * data) {
 
-  rxc_simple_source__data * source_data = (rxc_simple_source__data*)(s->data);
+  rxc_simple_source__data * source_data = (rxc_simple_source__data*)(s->internal_data);
   assert(source_data!=NULL);
   for(unsigned int i=0; i<source_data->n_subscriptions; ++i) {
     rxc_subscription * subscription = source_data->subscriptions[i];
@@ -25,7 +25,7 @@ static void rxc_simple_source__free(rxc_source * self) {
   //TODO: Let everyone know and wait for their unsubscriptions
   //      Means we should just set a flag here, then delete everything
   //      in unsubscribe...
-  rxc_simple_source__data * source_data = (rxc_simple_source__data*)(self->data);
+  rxc_simple_source__data * source_data = (rxc_simple_source__data*)(self->internal_data);
   assert(source_data!=NULL);
   rxc__free(source_data->subscriptions);
   rxc__free(source_data);
@@ -33,7 +33,7 @@ static void rxc_simple_source__free(rxc_source * self) {
 
 static void rxc_simple_source__subscribe(rxc_subscription * subscription) {
   rxc_source * self = subscription->source;
-  rxc_simple_source__data * source_data = (rxc_simple_source__data*)(self->data);
+  rxc_simple_source__data * source_data = (rxc_simple_source__data*)(self->internal_data);
   assert(source_data!=NULL);
 
   rxc_subscription** new_subscriptions = (rxc_subscription**)rxc__malloc( 
@@ -62,6 +62,6 @@ int rxc_simple_source_create(rxc_source**source) {
   memset(data,0,sizeof(rxc_simple_source__data));
   data->n_subscriptions = 0;
   data->subscriptions = NULL;
-  return rxc_source_create(source, &rxc_simple_source__vtable, data);
+  return rxc_source_create(source, &rxc_simple_source__vtable, data, NULL);
 }
 

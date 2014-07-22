@@ -17,11 +17,13 @@
 int rxc_source_create(
     rxc_source** source,
     const rxc_source__vtable * vtable,
-    void * data) {
+    void * internal_data,
+    void * user_data) {
   *source = (rxc_source*)rxc__malloc(sizeof(rxc_source));
   memset(*source, 0, sizeof(rxc_source));
   (*source)->vtable = vtable;
-  (*source)->data = data;
+  (*source)->user_data = user_data;
+  (*source)->internal_data = internal_data;
   return 0;
 }
 
@@ -50,7 +52,7 @@ typedef struct rxc_source_seq__data rxc_source_seq__data;
 static void rxc_source_seq__cb_subscribe(rxc_subscription * subscription) {
   rxc_source * self = subscription->source;
   rxc_observer * observer = subscription->observer;
-  rxc_source_seq__data * data = (rxc_source_seq__data*)self->data;
+  rxc_source_seq__data * data = (rxc_source_seq__data*)self->internal_data;
   for(int i=data->min; i<=data->max; ++i) {
     // Give the observer each value
     rxc_observer_next(observer, subscription, &i);
@@ -59,7 +61,7 @@ static void rxc_source_seq__cb_subscribe(rxc_subscription * subscription) {
 }
 
 static void rxc_source_seq__free(rxc_source * self) {
-  free(self->data);
+  free(self->internal_data);
 }
 static void rxc_source_seq__notify(rxc_source * self, void * notification) {
 	//TODO: Implement me!
@@ -73,8 +75,7 @@ static const rxc_source__vtable seq_vtable = {
 
 int rxc_source_create_seq(rxc_source ** source, int min, int max) {
   rxc_source_seq__data * data = (rxc_source_seq__data*)rxc__malloc(sizeof(rxc_source_seq__data));
-  rxc_source_create(source, &seq_vtable, data);
-  (*source)->data = data;
+  rxc_source_create(source, &seq_vtable, data, NULL);
 
   data->min = min;
   data->max = max;

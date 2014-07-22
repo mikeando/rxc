@@ -25,7 +25,8 @@ struct rxc_source__vtable {
 
 struct rxc_source {
   const rxc_source__vtable * vtable;
-  void * data;
+  void * internal_data;
+  void * user_data;
 };
 
 //TODO: This should get observer and source members

@@ -52,7 +52,7 @@ void test_core_source__subscribe_returns_a_subscription(void) {
 
   };
 
-  ok = rxc_source_create(&source, &vtable, NULL);
+  ok = rxc_source_create(&source, &vtable, NULL,NULL);
   cl_assert_equal_i(0,ok);
   ok = rxc_observer_create(&observer,&ob_vtable,NULL);
   cl_assert_equal_i(0,ok);

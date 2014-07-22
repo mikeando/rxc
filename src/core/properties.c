@@ -1,9 +1,14 @@
 #include "rxc.h"
 #include "rxc/simple_source.h"
+#include <stdio.h>
+
 //p is the property this source belongs to.
 int rxc_property__create_source(rxc_source** source, void * p) {
   //TODO: We need to track the subscriptions...
-  return rxc_simple_source_create(source);
+  int ok = rxc_simple_source_create(source);
+  if(ok!=0) return ok;
+  (*source)->user_data = p;
+  return 0;
 }
 
 rxc_property * rxc_property_create(const rxc_property_vtable* vtable) {
@@ -61,33 +66,58 @@ struct rxc_property_derived_data {
   rxc_observer * observer;
   unsigned int n_subscriptions;
   rxc_subscription ** subscriptions;
-  void(*map)(rxc_property*, rxc_property**, unsigned int);
+  void(*map)(rxc_property_value*, rxc_property_value*, unsigned int);
 };
 
 typedef struct rxc_property_derived_data rxc_property_derived_data;
 
-static void prop_observer_next(rxc_observer * self, rxc_subscription * subscription, void * data) {
+static void derived_prop_observer_next(rxc_observer * self, rxc_subscription * subscription, void * data) {
+
+  //FOR NOW, lets be stupid 
+  // - assume the change is a property changed event.
+  // - dont cache the values
+
+
+  // Get the derived data
+  rxc_property * p = self->data;
+  rxc_property_derived_data * derived_data = p->data;
+
+  // Finally get our new value.
+  rxc_property_value * values = malloc(sizeof(rxc_property_value)*derived_data->n_subscriptions);
+  for(unsigned int i=0; i<derived_data->n_subscriptions; ++i) {
+    rxc_property_get( (rxc_property*) derived_data->subscriptions[i]->source->user_data, values+i);
+  }
+
+  rxc_property_value v;
+  derived_data->map(&v, values, derived_data->n_subscriptions);
+  rxc_property_set(p,&v);
+
+  // Get each property
+
+  // Finally we can find the subscription.
+  // Get the value from the property in the data
+  // remap
+  // and let everyone know.
+}
+static void derived_prop_observer_error(rxc_observer * self, rxc_subscription * subscription, void * data) {
   //TODO: Implement me
 }
-static void prop_observer_error(rxc_observer * self, rxc_subscription * subscription, void * data) {
+static void derived_prop_observer_done(rxc_observer * self, rxc_subscription * subscription) {
   //TODO: Implement me
 }
-static void prop_observer_done(rxc_observer * self, rxc_subscription * subscription) {
+static void derived_prop_observer_on_subscribe(rxc_subscription * subscription) {
   //TODO: Implement me
 }
-static void prop_observer_on_subscribe(rxc_subscription * subscription) {
-  //TODO: Implement me
-}
-static void prop_observer_free(rxc_observer * self) {
+static void derived_prop_observer_free(rxc_observer * self) {
   //TODO: Implement me
 }
 
 static rxc_observer_vtable derived_observer_vtable = {
-  prop_observer_next,
-  prop_observer_done,
-  prop_observer_error,
-  prop_observer_on_subscribe,
-  prop_observer_free
+  derived_prop_observer_next,
+  derived_prop_observer_done,
+  derived_prop_observer_error,
+  derived_prop_observer_on_subscribe,
+  derived_prop_observer_free
 };
 
 void rxc_property__derived_free(rxc_property*self);
@@ -108,8 +138,8 @@ static rxc_property_vtable derived_property_vtable = {
 };
 
 
-
-rxc_property* rxc_property_derived_create( void(*map)(rxc_property*, rxc_property**, unsigned int), rxc_property** properties, unsigned int n_properties) {
+//TODO: The form of the callback should be changed to take rxc_property_values
+rxc_property* rxc_property_derived_create( void(*map)(rxc_property_value*, rxc_property_value*, unsigned int), rxc_property** properties, unsigned int n_properties) {
   rxc_property * property = rxc_property_create(&derived_property_vtable);
   rxc_property_derived_data * data = (rxc_property_derived_data*)rxc__malloc(sizeof(rxc_property_derived_data));
   memset(data,0,sizeof(rxc_property_derived_data));
@@ -128,6 +158,16 @@ rxc_property* rxc_property_derived_create( void(*map)(rxc_property*, rxc_propert
   data->map = map;
 
   property->data = data;
+
+  // Finally set up our initial value.
+  rxc_property_value * values = malloc(sizeof(rxc_property_value)*n_properties);
+  for(unsigned int i=0; i<n_properties; ++i) {
+    rxc_property_get(properties[i], values+i);
+  }
+
+  rxc_property_value v;
+  data->map(&v, values, n_properties);
+  rxc_property_set(property,&v);
 
   return property;
 } 

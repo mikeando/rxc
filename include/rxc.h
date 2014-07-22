@@ -56,7 +56,8 @@ typedef struct rxc_source__vtable rxc_source__vtable;
 int rxc_source_create(
     rxc_source** source,
     const rxc_source__vtable * vtable,
-    void * data);
+    void * internal_data,
+    void * user_data);
 int rxc_source_free(rxc_source* observer);
 
 
@@ -120,7 +121,7 @@ extern void * RXC_PROPERTY_CHANGED_EVENT;
 
 // Real properties stuff
 rxc_property * rxc_property_create(const rxc_property_vtable* vtable);
-rxc_property* rxc_property_derived_create( void(*map)(rxc_property*, rxc_property**, unsigned int), rxc_property**, unsigned int); 
+rxc_property* rxc_property_derived_create( void(*map)(rxc_property_value*, rxc_property_value*, unsigned int), rxc_property** properties, unsigned int n_properties);
 void rxc_property_free(rxc_property* p);
 
 // Property Value stuff
